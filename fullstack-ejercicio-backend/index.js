@@ -10,86 +10,90 @@ app.use(express.static('build'))
 
 morgan.token('content-value', (request) => JSON.stringify(request.body) )
 
-app.use( morgan(':method :url :status :res[content-length] - :response-time ms :content-value', { skip: (req, res) => req.method !== 'POST' }))
+app.use( morgan(':method :url :status :res[content-length] - :response-time ms :content-value', { skip: req => req.method !== 'POST' }))
 
 const errorHandler = (error, request, response, next) => {
-    console.log(error.message)
+  console.log(error.message)
 
-    if(error.name === "CastError"){
-        return response.status(400).send( { error: "Malformatted id" } )
-    } else if(error.name === 'ValidationError'){
-        return response.status(400).json( { error: error.message })
-    }
+  if(error.name === 'CastError'){
+    return response.status(400).send( { error: 'Malformatted id' } )
+  } else if(error.name === 'ValidationError'){
+    return response.status(400).json( { error: error.message })
+  }
 
-    next(error)
+  next(error)
 }
 
 app.get('/api/persons', (request, response) => {
-    Person.find({}).then(people => {
-        response.json(people)
-    })
+  Person.find({}).then(people => {
+    response.json(people)
+  })
 })
 
 app.get('/info', (request, response) => {
-    const date = new Date()
-    const persons = Person.find({})
+  const date = new Date()
+  Person.find({})
     .then(persons => {
-        response.send(`Phonebook has ${persons.length} people<br />${date.toString()}`)
+      response.send(`Phonebook has ${persons.length} people<br />${date.toString()}`)
     })
 })
 
 app.get('/api/persons/:id', (request, response, next) => {
-    Person.findById(request.params.id)
+  Person.findById(request.params.id)
     .then(person => {
-        if(person){
-            response.json(person)
-        } else {
-            response.status(404).json({ "error": `Couldn't find any person with the ${request.params.id}` })
-        }
+      if(person){
+        response.json(person)
+      } else {
+        response.status(404).json({ 'error': `Couldn't find any person with the ${request.params.id}` })
+      }
     })
     .catch(error => next(error))
 })
 
 app.delete('/api/persons/:id', (request, response, next) => {
-    const id = request.params.id
+  const id = request.params.id
 
-    Person.findByIdAndDelete(id)
-    .then(updatedNote => {
+  Person.findByIdAndDelete(id)
+    .then(deletedPerson => {
+      if(deletedPerson){
         response.status(204).end()
+      } else {
+        response.status(404).json( { 'error': 'Person not found' } )
+      }
     })
     .catch(error => next(error))
 })
 
 
 app.post('/api/persons', (request, response, next) => {
-    const body = request.body;
+  const body = request.body
 
-    if (!body.name || !body.number) {
-        return response.status(400).json({ "error": "missing name or number" });
-    }
+  if (!body.name || !body.number) {
+    return response.status(400).json({ 'error': 'missing name or number' })
+  }
 
-    const newPerson = new Person({
-        name: body.name,
-        number: body.number
-    });
+  const newPerson = new Person({
+    name: body.name,
+    number: body.number
+  })
 
-    newPerson.save()
+  newPerson.save()
     .then(savedPerson => {
-        response.json(savedPerson)
+      response.json(savedPerson)
     })
     .catch(error => next(error))
-});
+})
 
 app.put('/api/persons/:id', (request, response, next) => {
-    const body = request.body
+  const body = request.body
 
-    Person.findByIdAndUpdate(request.params.id, { number: body.number }, { new: true, runValidators: true })
-    .then(updatedPerson =>{
-        if(updatedPerson){
-            response.json(updatedPerson)
-        } else {
-            response.status(404).json( { "error": "couldn't find any person with that id" } )
-        }
+  Person.findByIdAndUpdate(request.params.id, { number: body.number }, { new: true, runValidators: true })
+    .then(updatedPerson => {
+      if(updatedPerson){
+        response.json(updatedPerson)
+      } else {
+        response.status(404).json( { 'error': 'couldn\'t find any person with that id' } )
+      }
     })
     .catch(error => next(error))
 })
@@ -97,8 +101,7 @@ app.put('/api/persons/:id', (request, response, next) => {
 
 app.use(errorHandler)
 
-const PORT = process.env.PORT || 3001
-app.listen(PORT, ()=> {
-    console.log(`Server running on port ${PORT}`);
+const PORT = process.env.PORT
+app.listen(PORT, () => {
+  console.log(`Server running on port ${PORT}`)
 })
-  
