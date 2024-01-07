@@ -3,8 +3,9 @@ const app = express()
 const cors = require('cors')
 const mongoose = require('mongoose')
 const blogRouter = require('./controllers/blogs')
+const config = require('./utils/config')
 
-const mongoUrl = 'mongodb+srv://qdiego:YnBZbUx2wk7XbYzx@primercluster.vpiqf1i.mongodb.net/?retryWrites=true&w=majority'
+const mongoUrl = config.MONGODB_URI
 mongoose.connect(mongoUrl)
 
 app.use(cors())

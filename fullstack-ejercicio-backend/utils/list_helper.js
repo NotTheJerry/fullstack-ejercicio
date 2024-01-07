@@ -59,7 +59,6 @@ const authorMostLikes = (array) => {
         return arrayMax[item].likes
     })
 
-    console.log(mayor)
     return arrayMax[mayor]
 }
 
